@@ -1,0 +1,53 @@
+#!/bin/bash
+
+export CUDA_VISIBLE_DEVICES=0
+
+model_name=TimeMixer
+
+seq_len=96
+e_layers=2
+down_sampling_layers=3
+down_sampling_window=2
+learning_rate=0.01
+d_model=32
+d_ff=32
+train_epochs=10
+patience=10
+batch_size=16
+
+# Run for different prediction lengths
+for pred_len in 96 192 336 720; do
+echo "Running TimeMixer for pred_len=$pred_len"
+
+python -u run.py \
+  --task_name forecast \
+  --is_training 1 \
+  --root_path ./dataset/ETT-small/ \
+  --data_path ETTm2.csv \
+  --model_id ETTm2_${seq_len}_${pred_len} \
+  --model $model_name \
+  --data ETTm2 \
+  --features M \
+  --seq_len $seq_len \
+  --label_len 0 \
+  --pred_len $pred_len \
+  --e_layers $e_layers \
+  --enc_in 7 \
+  --c_out 7 \
+  --des 'Exp' \
+  --itr 1 \
+  --d_model $d_model \
+  --d_ff $d_ff \
+  --batch_size 128 \
+  --learning_rate $learning_rate \
+  --train_epochs $train_epochs \
+  --patience $patience \
+  --down_sampling_layers $down_sampling_layers \
+  --down_sampling_method avg \
+  --down_sampling_window $down_sampling_window
+
+echo "Completed pred_len=$pred_len"
+echo "-----------------------------------"
+done
+
+echo "All TimeMixer experiments completed!"
